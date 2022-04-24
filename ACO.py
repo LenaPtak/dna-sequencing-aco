@@ -32,7 +32,7 @@ class ACO(object):
         self.q = 1  
         self.iter = 1
         # Liczba iteracji
-        self.liczba_iteracji = 10
+        self.liczba_iteracji = 1000
 
         # Nazwa pliku
         self.file_name = file_name
@@ -268,8 +268,10 @@ class ACO(object):
             print(self.spektrum[Si], colored("--", "green"), colored(self.graph[Si][Sj], "yellow"), colored("->", "green"), self.spektrum[Sj])
                 
 
-                
 
 
-new = ACO("test.txt")
-new.run()
+# Tutaj bedzie miejsca na przetestowanie wszystkich instancji w pętli tworząc dla każdej obiekt
+file_names = ["test.txt"]  
+for file_name in file_names:
+    new = ACO(file_name)
+    new.run()
