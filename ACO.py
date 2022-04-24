@@ -32,7 +32,7 @@ class ACO(object):
         self.q = 1  
         self.iter = 1
         # Liczba iteracji
-        self.liczba_iteracji = 1000
+        self.liczba_iteracji = 10
 
         # Nazwa pliku
         self.file_name = file_name
