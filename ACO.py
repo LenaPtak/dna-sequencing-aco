@@ -1,5 +1,6 @@
 from termcolor import colored
 import numpy as np
+import datetime
 import random
 import time
 import math
@@ -11,30 +12,14 @@ class ACO(object):
         # Próby otworzenia pliku
         try:
             with open(file_name, "r+") as f:
-                spektrum = list(f.read().split('\n')).pop()
+                spektrum = list(f.read().split('\n'))
+                spektrum.pop()
                 spektrum = list(map(str, spektrum))
         except:
             print(colored("Error while reading file. Check the name of file or it's content.", "red"))
             sys.exit()
         
-        # Spektrum - cały zbiór podanych słów 
-        self.spektrum = spektrum
-        # Długość pojedynczego słowa w spektrum
-        self.length_of_word = len(spektrum[0])
-        # Liczba wszystkich slów w spektrum
-        self.number_of_words = len(spektrum)
-        # Liczba wierzchołków
-        self.number_of_verticles = self.number_of_words  
-        # Macierz feromonów wypełniona jedynkami
-        self.pheromone = np.ones([self.number_of_verticles, self.number_of_verticles])  
-        # Kolonia mrówek, czyli każda mrówka i jej skończona droga
-        self.ant_colony = [[0 for _ in range(self.number_of_verticles)] for _ in range(self.m)]
-        # Oblicz macierz sąsiedztwa (odległości między miastami)
-        self.graph = self.calculate_weights_between_verticles(self.number_of_verticles)  
-        # Funkcja heurystyczna (do wzoru na prawdopodobieństwo)                                              
-        self.eta = 10. / self.graph 
-
-        # Liczba mrówek
+         # Liczba mrówek
         self.number_of_ants = 30  
         # Współczynnik ważności feromonów
         self.alpha = 1 
@@ -47,6 +32,23 @@ class ACO(object):
         self.iter = 1
         # Liczba iteracji
         self.liczba_iteracji = 1000  
+
+        # Spektrum - cały zbiór podanych słów 
+        self.spektrum = spektrum
+        # Długość pojedynczego słowa w spektrum
+        self.length_of_word = len(spektrum[0])
+        # Liczba wszystkich slów w spektrum
+        self.number_of_words = len(spektrum)
+        # Liczba wierzchołków
+        self.number_of_verticles = self.number_of_words  
+        # Macierz feromonów wypełniona jedynkami
+        self.pheromone = np.ones([self.number_of_verticles, self.number_of_verticles])  
+        # Kolonia mrówek, czyli każda mrówka i jej skończona droga
+        self.ant_colony = [[0 for _ in range(self.number_of_verticles)] for _ in range(self.number_of_ants)]
+        # Oblicz macierz sąsiedztwa (odległości między miastami)
+        self.graph = self.calculate_weights_between_verticles()  
+        # Funkcja heurystyczna (do wzoru na prawdopodobieństwo)                                              
+        self.eta = 10. / self.graph     # ???????????????
 
         # Tablica dystansów zrobionych przez mrówki.
         self.paths = None  
@@ -75,7 +77,8 @@ class ACO(object):
 
     # Tworzenie macierzy sąsiedztwa
     def calculate_weights_between_verticles(self):  # liczba miast, tablica ze współrzędnymi.
-        graph = [[0 for j in range(self.number_of_words)] for i in range(self.number_of_words)]
+        # graph = [[0 for j in range(self.number_of_words)] for i in range(self.number_of_words)]
+        graph = np.zeros((self.number_of_words, self.number_of_words))
         for Si in range(self.number_of_words):
             for Sj in range(self.number_of_words):
                 x = self.spektrum[Si]
@@ -101,7 +104,7 @@ class ACO(object):
     def ant_run(self):
         for current_ant_index in range(self.number_of_ants):  
             # Losuje liczbę w zakresie liczbie miast.
-            start_verticle = random.randint(self.number_of_verticles - 1)  
+            start_verticle = random.randint(0, self.number_of_verticles - 1)  
             # Wierzchołek startowy.
             self.ant_colony[current_ant_index][0] = start_verticle  
             # Lista wierzchołków do odwiedzenia
@@ -119,7 +122,7 @@ class ACO(object):
                     probability_of_next_verticle.append(
                         self.pheromone[current_verticle][possible_verticle] ** 
                         self.alpha * 
-                        self.Eta[current_verticle][possible_verticle] ** 
+                        self.eta[current_verticle][possible_verticle] ** 
                         self.beta
                     )  
                 # Suma pradopodobieństw w powyższej listy
@@ -155,7 +158,7 @@ class ACO(object):
         list_of_path_costs = []
         # Dla każdej ścieżki mrówki:
         for path in self.ant_colony:  
-            cost = self.calculate_one_path_cost(path, self.macierz_sasiedztwa)
+            cost = self.calculate_one_path_cost(path)
             list_of_path_costs.append(cost)
         # Tablica dystansów zrobionych przez mrówki.
         return list_of_path_costs  
@@ -165,7 +168,7 @@ class ACO(object):
         # Macierz feromonów
         delta_pheromone = np.zeros([self.number_of_verticles, self.number_of_verticles]) 
         # Tablica kosztów ścieżek przebytych przez mrówki.
-        paths = self.calculate_cost_of_paths(self.ant_colony)  
+        paths = self.calculate_cost_of_paths()  
         for i in range(self.number_of_ants):  # m - liczba mrówek
             for j in range(self.number_of_verticles - 1):
                 a = self.ant_colony[i][j]
@@ -181,8 +184,11 @@ class ACO(object):
         # Wszystkie ścieżki parują tzn wszystkie wartości w tablicy feromonów mnożymy razy (1 - self.rho), czyli 0,9. I dodajemy wartość feromonow.
         self.pheromone = (1 - self.rho) * self.pheromone + delta_pheromone
         
+    def time_to_finish(self, iteracja, czas):
+        sekundyDoKonca = czas * (iteracja - self.liczba_iteracji)
+        return str(datetime.timedelta(seconds=sekundyDoKonca))
 
-    def aco(self):
+    def run(self):
         # Wartość najtańszej ścieżki ustawiamy na plus nieskończoność.
         cheapest_cost = math.inf  
         # Najtańsza ścieżka.
@@ -193,7 +199,7 @@ class ACO(object):
             # Tworzymy nową grupę składającą się z self.number_of_ants mrówek
             self.ant_run()  
             # Tablica kosztów poszczególnych przebytych przez powyższe mrówki ścieżek
-            self.paths = self.cost_of_pathscalculate_()  
+            self.paths = self.calculate_cost_of_paths()  
             # Najmniejszy koszt z aktualnej grupy mrówek
             current_cheapest_cost = min(self.paths)  
             # Najtańsza ścieżka z aktualnej grupy mrówek - lista wierzchołków
@@ -208,10 +214,13 @@ class ACO(object):
 
             end = time.time()
             print("Iteracja: ", iteracja, "     ", int(iteracja / self.liczba_iteracji * 100), "%   ",
-                  "Czas do końca: ", self.czasDoKonca(iteracja, start_verticle - end))
+                  "Czas do końca: ", self.time_to_finish(iteracja, start_verticle - end))
 
         print(f"Najlepszy wynik {self.file_name} to: {cheapest_cost}")
         print("Kolejność wierzchołków:")
         print(*cheapest_path)
 
 
+new = ACO("test.txt")
+new.run()
+print('ok')
