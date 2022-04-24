@@ -1,0 +1,25 @@
+Q - sekwencja czyli np. ACTCTGG
+S(Q) - spektrum, czyli zbiór słów np S = {"ACT", "GCT"...}
+G(V, A) - graf skierowany
+Si należy do S(Q), gdzie Si -> np. "ACT"
+każdy z wierzchołków ma na początku wartość == 1
+B - budżet
+B = n - l
+n - długość sekwencji Q
+l - długość słów
+w należących do zbioru S(Q)
+Koszt (waga) łuku zależy od tego jak bardzo słowa Si i Sj nakładają się na siebie
+
+Oij - oznacza liczbę końcowych symboli (długość sufiksu) słowa Sia
+
+
+AAGGCCGGCT
+ACACCCGCCG
+ACCAGGGCGT
+ACCATGGATG
+ACCCGCCGCC
+ACGATGCCCC
+AGAAGGATTC
+AGCTCACCAT
+AGGCACCAGG
+AGGCCGGCTT
