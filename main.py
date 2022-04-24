@@ -2,7 +2,7 @@ from termcolor import colored
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
-
+from ACO import ACO
 
 # Proby otworzenia pliku
 try:
@@ -56,38 +56,3 @@ def create_graph():
 
 create_graph()
 
-# # Czytaj dane
-# def wczytaj_dane(nazwaPliku):
-#     plik = open(nazwaPliku, "r")
-#     liczbaPunktow = int(plik.readline())
-#     macierz = []  # [[1,421,423], [2, 12, 982], ...]
-#     for i in plik:
-#         macierz.append(list(map(int, i.split())))
-
-#     return macierz, liczbaPunktow
-
-
-# # Otwarcie pliku
-# nazwaPliku = 'berlin52.txt'
-# wspolrzedne, liczbaPunktow = wczytaj_dane(nazwaPliku)
-# wspolrzedne = np.array(wspolrzedne)  # Z biblioteki numpy. Z tablicy [1, 2, 3] robi [1 2 3].
-# wspolrzedne = wspolrzedne[:, 1:]  # [[51 30 40] ...] --> [[30 40] ...]
-# pokaz_wspolrzedne = np.vstack(
-#     [wspolrzedne, wspolrzedne[0]])  # dodaje wierzcholek startowy na koniec --> .append([37, 89])
-
-# # wywołanie klasy ACO:
-# aco = ACO(liczba_miast=liczbaPunktow, wspolrzedne=wspolrzedne.copy(), nazwaPliku=nazwaPliku)
-# ostateczna_sciezka, ostateczny_wynik, naj_droga = aco.run()
-
-# # Wykres
-# f1 = plt.figure(1)
-# plt.title(f'Współrzędne miast {nazwaPliku}')
-# x, y = wspolrzedne[:, 0], wspolrzedne[:, 1]
-# plt.plot(x, y, '.', color='black')
-# plt.grid(True)
-# plt.xlim(0, max(x) * 1.1)
-# plt.ylim(0, max(y) * 1.1)
-# plt.xlabel('x', fontweight='bold')
-# plt.ylabel('y', fontweight='bold')
-
-# plt.show()
