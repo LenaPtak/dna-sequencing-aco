@@ -1,3 +1,4 @@
+from msilib import sequence
 from termcolor import colored
 import numpy as np
 import datetime
@@ -31,8 +32,10 @@ class ACO(object):
         self.q = 1  
         self.iter = 1
         # Liczba iteracji
-        self.liczba_iteracji = 1000  
+        self.liczba_iteracji = 1000
 
+        # Nazwa pliku
+        self.file_name = file_name
         # Spektrum - cały zbiór podanych słów 
         self.spektrum = spektrum
         # Długość pojedynczego słowa w spektrum
@@ -216,11 +219,57 @@ class ACO(object):
             print("Iteracja: ", iteracja, "     ", int(iteracja / self.liczba_iteracji * 100), "%   ",
                   "Czas do końca: ", self.time_to_finish(iteracja, start_verticle - end))
 
-        print(f"Najlepszy wynik {self.file_name} to: {cheapest_cost}")
-        print("Kolejność wierzchołków:")
-        print(*cheapest_path)
+        print(f"\nNajmniejszy koszt ścieżki {self.file_name}: {colored(cheapest_cost, 'green')}")
+        print("\nKolejność indeksów wierzchołków:", *cheapest_path)
+
+
+        shift = ""
+        sequence_list = []
+        sequence_matrix = []
+
+        for visited in range(len(cheapest_path)-1):
+            Si = cheapest_path[visited]
+            Sj = cheapest_path[visited+1]
+            word = shift + self.spektrum[Si]
+            sequence_list.append(word)
+            # print(word)
+            next_shift = self.graph[Si][Sj]
+            shift += " " * int(next_shift)
+            if (visited == len(cheapest_path)-2):
+                word = shift + self.spektrum[Sj]
+                sequence_list.append(word)
+
+        size = 0
+        for i in sequence_list:
+            if len(i) > size: size = len(i)
+        
+        for i in sequence_list:
+            temp = i
+            while len(temp) != size:
+                temp += " "
+            sequence_matrix.append(list(temp))
+        
+        with open("results.txt", "w+") as file:
+            sequence = ""
+            for j in range(size):
+                for i in reversed(range(self.number_of_verticles)):
+                    letter = sequence_matrix[i][j]
+                    if letter != " ":
+                        sequence += letter
+                        file.write(f'{"".join(sequence_matrix[i])}\n')
+                        break
+
+        print("\nSekwencja: " + colored(sequence, "green"))
+
+        print("\nPrzejścia w sekwencji z wagami: ")
+        for visited in range(len(cheapest_path)-1):
+            Si = cheapest_path[visited]
+            Sj = cheapest_path[visited+1]
+            print(self.spektrum[Si], colored("--", "green"), colored(self.graph[Si][Sj], "yellow"), colored("->", "green"), self.spektrum[Sj])
+                
+
+                
 
 
 new = ACO("test.txt")
 new.run()
-print('ok')
