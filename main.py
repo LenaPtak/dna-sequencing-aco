@@ -3,6 +3,8 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
+
+# Proby otworzenia pliku
 try:
     with open("test.txt", "r+") as f:
         spektrum = list(f.read().split('\n'))
@@ -10,39 +12,49 @@ try:
         spektrum = list(map(str, spektrum))
         length_of_word = len(spektrum[0])
         number_of_words = len(spektrum)
+        # Tworzenie grafu (macierzy) wypełnionej zerami
+        graph = [[0 for j in range(number_of_words)] for i in range(number_of_words)]
 except:
     print(colored("Error while reading file. Check the name of file or it's content.", "red"))
     sys.exit()
 
-def check_weight_between(x, y):
-    weight = 0 #O ij
-    for i in range(length_of_word-1, -1, -1):
-        if y[:length_of_word-i] == x[i:]:
-            # print(y[:length_of_word-i], x[i:])
-            weight = length_of_word - i
 
-    return length_of_word - weight
-
-
-
-# # Tworzenie grafu
-graph = [[0 for j in range(number_of_words)] for i in range(number_of_words)]
-d = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0}
-
-spektrum.sort()
-for i in spektrum:
-    print(i)
-
-for i in range(number_of_words):
-    for j in range(number_of_words):
-        x = spektrum[i]
-        y = spektrum[j]
-        graph[i][j] = check_weight_between(x, y)
-        
-        d[graph[i][j]] += 1
+# Cij -> Funkcja sprawdzajaca wagi pomiedzy podanymi wierzcholkami (slowami)
+def check_weight_between(Si, Sj):
+    
+    if Si == Sj: return -1  # Zakłada się, że Si != Sj
+    """
+    Powyższy warunek powoduje, że ZAWSZE:
+         0 <= Oij <= length_of_word -1
+         1 <= Cij <= length_of_word
+    """   
+    Oij = 0 # oznacza liczbę końcowych symboli (długość sufiksu) słowa Si
+    
+    for index in range(length_of_word-1, -1, -1):
+        if Sj[:length_of_word-index] == Si[index:]:
+            Oij = length_of_word - index
+    
+    Cij = length_of_word - Oij
+    return Cij
 
 
-print(graph)
+def create_graph():
+    # Tworzymy słownik z kluczami (wagami krawędzi) i wartościami (liczbą wystąpień takiej wagi krawędzi)
+    list_of_keys = list(map(lambda num: num, range(-1, length_of_word+1)))
+    dictionary = {}
+    for key in list_of_keys:
+        dictionary[key] = 0
+    
+    for Si in range(number_of_words):
+        for Sj in range(number_of_words):
+            x = spektrum[Si]
+            y = spektrum[Sj]
+            # Dodajemy wagę krawędzi między wierzchołami do grafu
+            graph[Si][Sj] = check_weight_between(x, y)
+            # Dodajemy wagę krawędzi do słownika z ich częstotliwością występowania
+            dictionary[check_weight_between(x, y)] += 1
+
+create_graph()
 
 # # Czytaj dane
 # def wczytaj_dane(nazwaPliku):
