@@ -30,9 +30,8 @@ class ACO(object):
         self.rho = 0.1  
         # Stały współczynnik
         self.q = 1  
-        self.iter = 1
         # Liczba iteracji
-        self.liczba_iteracji = 1000
+        self.liczba_iteracji = 100
 
         # Nazwa pliku
         self.file_name = file_name
@@ -51,7 +50,7 @@ class ACO(object):
         # Oblicz macierz sąsiedztwa (odległości między miastami)
         self.graph = self.calculate_weights_between_verticles()  
         # Funkcja heurystyczna (do wzoru na prawdopodobieństwo)                                              
-        self.eta = 10. / self.graph     # ???????????????
+        self.eta = 10. / self.graph     
 
         # Tablica dystansów zrobionych przez mrówki.
         self.paths = None  
@@ -216,8 +215,8 @@ class ACO(object):
             self.update_pheromone()
 
             end = time.time()
-            print("Iteracja: ", iteracja, "     ", int(iteracja / self.liczba_iteracji * 100), "%   ",
-                  "Czas do końca: ", self.time_to_finish(iteracja, start_verticle - end))
+            print("Iteracja: ", iteracja, "     " if len(str(iteracja))==1 else "    ", colored(str(int(iteracja / self.liczba_iteracji * 100)) + ("%     " if len(str(iteracja))==1 else "%    "), "green"),
+                  "Czas do końca: ", colored(str(self.time_to_finish(iteracja, start_verticle - end)), "yellow"))
 
         print(f"\nNajmniejszy koszt ścieżki {self.file_name}: {colored(cheapest_cost, 'green')}")
         print("\nKolejność indeksów wierzchołków:", *cheapest_path)
@@ -268,10 +267,8 @@ class ACO(object):
             print(self.spektrum[Si], colored("--", "green"), colored(self.graph[Si][Sj], "yellow"), colored("->", "green"), self.spektrum[Sj])
                 
 
-
-
 # Tutaj bedzie miejsca na przetestowanie wszystkich instancji w pętli tworząc dla każdej obiekt
-file_names = ["test.txt"]  
+file_names = ["instance.txt"]  
 for file_name in file_names:
     new = ACO(file_name)
     new.run()
