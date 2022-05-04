@@ -52,6 +52,9 @@ class ACO(object):
         # Funkcja heurystyczna (do wzoru na prawdopodobieństwo)   
         # Ilość śladu feromonowego                                           
         self.eta = 10. / self.graph     
+        # TODO: ustalić budżet, czyli B=n-l,  gdzie n jest długością sekwencji Q, a l jest długością słów należących do zbioru S(Q). 
+        # Długość sekwencji Q jest podana i u nas wynosi 209 
+        self.budget = [(209 - self.length_of_word) for _ in range(1) for _ in range(self.number_of_ants)]
 
         # Tablica dystansów zrobionych przez mrówki.
         self.paths = None  
@@ -118,7 +121,9 @@ class ACO(object):
             current_verticle = start_verticle
             # Zmienna pomocnicza
             helper_index = 1
-            while len(not_visited_verticles) != 0:
+            # TODO: powinien być or ale wywala błąd
+            while self.budget[current_ant_index] != 0 or len(not_visited_verticles) != 0:
+            # while len(not_visited_verticles) != 0:
                 # Tablica zawierająca prawodopodobieństwa przejść do kolejno nieodwiedzonych wierzchołków
                 probability_of_next_verticle = []
                 # Oblicz prawdopodobieństwo przejścia między wierzchołkami przez feromon
@@ -137,13 +142,25 @@ class ACO(object):
                 # Ruletka wybiera miasto
                 next_verticle_index = self.random(probability_of_next_verticle)
 
-                current_verticle = not_visited_verticles[next_verticle_index]
+                # TODO: sprawdzić czy działa
+                if self.budget[current_ant_index] >= int(self.graph[current_verticle][next_verticle_index]):
+                    current_verticle = not_visited_verticles[next_verticle_index]
+                else:
+                    #szukaj innego tańszego wierzchołka; jak nie ma to koniec
+                    print("Budżet za mały!")
+                    not_visited_verticles.remove(next_verticle_index)
+                    continue
+
                 # W macierzy "ant_colony[current_ant_index][helper_index]"
                 # Współrzędna current_ant_index to numer mrówki, 
                 # a helper_index to nr wierzcholka, do ktorego przeszła mrówka.
                 # Tworzymy więc dla każdej mrówkę jej ścieżkę.
                 self.ant_colony[current_ant_index][helper_index] = current_verticle
-                
+
+                # TODO: zmniejszyć budżet o koszt przejścia self.graph[poprzedni wierzcholek][nastepny wierzcholek]
+                self.budget[current_ant_index] -= int(self.graph[self.ant_colony[current_ant_index][helper_index-1]][current_verticle])
+                print("Mrówka o nr ", colored(current_ant_index, "green"), " ma budżet ", colored(self.budget[current_ant_index], "green"))
+
                 not_visited_verticles.remove(current_verticle)
                 helper_index += 1
 
