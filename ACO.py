@@ -49,7 +49,8 @@ class ACO(object):
         self.ant_colony = [[0 for _ in range(self.number_of_verticles)] for _ in range(self.number_of_ants)]
         # Oblicz macierz sąsiedztwa (odległości między miastami)
         self.graph = self.calculate_weights_between_verticles()  
-        # Funkcja heurystyczna (do wzoru na prawdopodobieństwo)                                              
+        # Funkcja heurystyczna (do wzoru na prawdopodobieństwo)   
+        # Ilość śladu feromonowego                                           
         self.eta = 10. / self.graph     
 
         # Tablica dystansów zrobionych przez mrówki.
@@ -78,7 +79,7 @@ class ACO(object):
 
 
     # Tworzenie macierzy sąsiedztwa
-    def calculate_weights_between_verticles(self):  # liczba miast, tablica ze współrzędnymi.
+    def calculate_weights_between_verticles(self): 
         # graph = [[0 for j in range(self.number_of_words)] for i in range(self.number_of_words)]
         graph = np.zeros((self.number_of_words, self.number_of_words))
         for Si in range(self.number_of_words):
@@ -96,7 +97,8 @@ class ACO(object):
         x = np.random.rand()
         # Enumerate umożliwia  iterację po obiektach takich jak lista
         # przy jednoczesnej informacji, którą iterację wykonujemy.
-        for index, t in enumerate(probability_of_next_verticle):
+        # TODO: sprawdzić czy lepsze wyniki są z posortowaną tablicą czy nie
+        for index, t in enumerate(probability_of_next_verticle): 
             x -= t
             if x <= 0: break
         # zwraca indeks następnego miasta do odwiedzenia.
@@ -110,6 +112,7 @@ class ACO(object):
             # Wierzchołek startowy.
             self.ant_colony[current_ant_index][0] = start_verticle  
             # Lista wierzchołków do odwiedzenia
+            # TODO: uzględnić przerwanie gdy skończy się budżet
             not_visited_verticles = list([v for v in range(self.number_of_verticles) if v != start_verticle]) 
             # Ustawiamy aktualny wierzchołek 
             current_verticle = start_verticle
@@ -170,6 +173,7 @@ class ACO(object):
         # Macierz feromonów
         delta_pheromone = np.zeros([self.number_of_verticles, self.number_of_verticles]) 
         # Tablica kosztów ścieżek przebytych przez mrówki.
+        # TODO: sprawdzić czy poniższa linia nie jest nadmiarowa - raczej nie trzeba liczyć jeszcze raz
         paths = self.calculate_cost_of_paths()  
         for i in range(self.number_of_ants):  # m - liczba mrówek
             for j in range(self.number_of_verticles - 1):
@@ -177,6 +181,8 @@ class ACO(object):
                 b = self.ant_colony[i][j + 1]
                 # Zostawianie feromonów.
                 delta_pheromone[a][b] = delta_pheromone[a][b] + self.q / paths[i]  
+
+            # TODO: prawdopodobnie trzeba usunąć domknięcie ścieżki
             a = self.ant_colony[i][0]
             b = self.ant_colony[i][-1]
             # Domknięcie ścieżki z zostawianiem feromonu.
@@ -200,7 +206,7 @@ class ACO(object):
             start_verticle = time.time()
             # Tworzymy nową grupę składającą się z self.number_of_ants mrówek
             self.ant_run()  
-            # Tablica kosztów poszczególnych przebytych przez powyższe mrówki ścieżek
+            # Tablica kosztów przebytych przez powyższe mrówki ścieżek
             self.paths = self.calculate_cost_of_paths()  
             # Najmniejszy koszt z aktualnej grupy mrówek
             current_cheapest_cost = min(self.paths)  
@@ -259,6 +265,7 @@ class ACO(object):
                         break
 
         print("\nSekwencja: " + colored(sequence, "green"))
+        print("\nDługość sekwencji: " + colored(len(sequence), "yellow"))
 
         print("\nPrzejścia w sekwencji z wagami: ")
         for visited in range(len(cheapest_path)-1):
