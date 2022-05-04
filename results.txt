@@ -1,20 +1,55 @@
-CGTGATGGTG          
-CGTGATGGTG          
-CGTGATGGTG          
-CGTGATGGTG          
-CGTGATGGTG          
-CGTGATGGTG          
-CGTGATGGTG          
-CGTGATGGTG          
-CGTGATGGTG          
-CGTGATGGTG          
-          AAGGCCGGCT
-          AAGGCCGGCT
-          AAGGCCGGCT
-          AAGGCCGGCT
-          AAGGCCGGCT
-          AAGGCCGGCT
-          AAGGCCGGCT
-          AAGGCCGGCT
-          AAGGCCGGCT
-          AAGGCCGGCT
+GGCGCCCCAG                                             
+GGCGCCCCAG                                             
+GGCGCCCCAG                                             
+GGCGCCCCAG                                             
+GGCGCCCCAG                                             
+GGCGCCCCAG                                             
+GGCGCCCCAG                                             
+GGCGCCCCAG                                             
+GGCGCCCCAG                                             
+         GACGATGCCC                                    
+          ACGATGCCCC                                   
+           CGATGCCCCC                                  
+            GATGCCCCCC                                 
+             ATGCCCCCCG                                
+              TGCCCCCCGG                               
+              TGCCCCCCGG                               
+                CCCCCCGGGC                             
+                 CCCCCGGGCC                            
+                  CCCCGGGCCG                           
+                  CCCCGGGCCG                           
+                    CCGGGCCGTC                         
+                     CGGGCCGTCT                        
+                     CGGGCCGTCT                        
+                       GGCCGTCTTC                      
+                       GGCCGTCTTC                      
+                         CCGTCTTCCC                    
+                          CGTCTTCCCC                   
+                           GTCTTCCCCT                  
+                            TCTTCCCCTC                 
+                             CTTCCCCTCC                
+                             CTTCCCCTCC                
+                               TCCCCTCCAT              
+                                CCCCTCCATC             
+                                 CCCTCCATCG            
+                                  CCTCCATCGT           
+                                   CTCCATCGTG          
+                                   CTCCATCGTG          
+                                   CTCCATCGTG          
+                                   CTCCATCGTG          
+                                   CTCCATCGTG          
+                                   CTCCATCGTG          
+                                   CTCCATCGTG          
+                                   CTCCATCGTG          
+                                   CTCCATCGTG          
+                                   CTCCATCGTG          
+                                             AAGGCCGGCT
+                                             AAGGCCGGCT
+                                             AAGGCCGGCT
+                                             AAGGCCGGCT
+                                             AAGGCCGGCT
+                                             AAGGCCGGCT
+                                             AAGGCCGGCT
+                                             AAGGCCGGCT
+                                             AAGGCCGGCT
+                                             AAGGCCGGCT
