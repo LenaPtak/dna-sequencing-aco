@@ -17,7 +17,7 @@ class ACO(object):
                 spektrum.pop()
                 spektrum = list(map(str, spektrum))
         except:
-            print(colored("Error while reading file. cost_of_edge the name of file or it's content.", "red"))
+            print(colored("Error while reading file. Check the name of file or it's content.", "red"))
             sys.exit()
         
          # Liczba mrówek
@@ -31,20 +31,20 @@ class ACO(object):
         # Stały współczynnik
         self.q = 1  
         # Liczba iteracji
-        self.liczba_iteracji = 100
+        self.liczba_iteracji = 10
 
         # Nazwa pliku
         self.file_name = file_name
         # Spektrum - cały zbiór podanych słów 
         self.spektrum = spektrum
+        # Długość sekwencji
+        self.length_of_sequence = 209
         # Długość pojedynczego słowa w spektrum
         self.length_of_word = len(spektrum[0])
         # Liczba wszystkich slów w spektrum
         self.number_of_words = len(spektrum)
         # Liczba wierzchołków
         self.number_of_verticles = self.number_of_words  
-        # Długość sekwencji (n)
-        self.length_of_sequence = 209 
         # Macierz feromonów wypełniona jedynkami
         self.pheromone = np.ones([self.number_of_verticles, self.number_of_verticles])  
         # Kolonia mrówek, czyli każda mrówka i jej skończona droga
@@ -54,20 +54,17 @@ class ACO(object):
         # Funkcja heurystyczna (do wzoru na prawdopodobieństwo)   
         # Ilość śladu feromonowego                                           
         self.eta = 10. / self.graph     
-        # TODO: ustalić budżet, czyli B=n-l,  gdzie n jest długością sekwencji Q, a l jest długością słów należących do zbioru S(Q). 
-        # Długość sekwencji Q jest podana i u nas wynosi 209 
-        
-        # self.budget = [(self.length_of_sequence - self.length_of_word) for _ in range(1) for _ in range(self.number_of_ants)]
-        self.budget = [self.length_of_sequence - self.length_of_word for _ in range(self.number_of_ants)]
 
         # Tablica dystansów zrobionych przez mrówki.
         self.paths = None  
         self.iter_x = []
         self.iter_y = []
 
+        self.budget = [self.length_of_sequence - self.length_of_word for _ in range(self.number_of_ants)]
+
 
     # Cij -> Funkcja sprawdzajaca wagi pomiedzy podanymi wierzcholkami (slowami)
-    def cost_of_edge_weight_between(self, Si, Sj):
+    def check_weight_between(self, Si, Sj):
         if Si == Sj: return -1  # Zakłada się, że Si != Sj
         """
         Powyższy warunek powoduje, że ZAWSZE:
@@ -94,7 +91,7 @@ class ACO(object):
                 x = self.spektrum[Si]
                 y = self.spektrum[Sj]
                 # Dodajemy wagę krawędzi między wierzchołami do grafu
-                graph[Si][Sj] = self.cost_of_edge_weight_between(x, y)
+                graph[Si][Sj] = self.check_weight_between(x, y)
         
         return graph
 
@@ -102,35 +99,30 @@ class ACO(object):
     # Ostateczny krok wybrania wierzchołka
     def random(self, probability_of_next_verticle):
         x = np.random.rand()
-        index_of_next_veticle = 0
         # Enumerate umożliwia  iterację po obiektach takich jak lista
         # przy jednoczesnej informacji, którą iterację wykonujemy.
         # TODO: sprawdzić czy lepsze wyniki są z posortowaną tablicą czy nie
         for index, t in enumerate(probability_of_next_verticle): 
             x -= t
-            index_of_next_veticle = index
             if x <= 0: break
         # zwraca indeks następnego miasta do odwiedzenia.
-        return index_of_next_veticle  
+        return index  
 
-    # Stwórz kolonię mrówek
+    # Stwórz kolonię mrówek - kolejne słowa ze spektrum przypisane są liczbom od <0 do len(spektrum)>
     def ant_run(self):
+        # TODO: uzględnić przerwanie gdy skończy się budżet
         for current_ant_index in range(self.number_of_ants):  
-            # Losuje liczbę w zakresie liczbie miast.
+            # Losuje liczbę w zakresie liczby miast
             start_verticle = random.randint(0, self.number_of_verticles - 1)  
-            # Wierzchołek startowy.
+            # Zaczynamy zapisywanie ścieżki dla mrówki inicjując pierwszy wierzchołek
             self.ant_colony[current_ant_index][0] = start_verticle  
             # Lista wierzchołków do odwiedzenia
-            # TODO: uzględnić przerwanie gdy skończy się budżet
-            not_visited_verticles = list([v for v in range(self.number_of_verticles) if v != start_verticle]) 
+            not_visited_verticles = list(verticle for verticle in range(self.number_of_verticles) if verticle != start_verticle) 
             # Ustawiamy aktualny wierzchołek 
             current_verticle = start_verticle
             # Zmienna pomocnicza
-            
-            helper_index = 0
-            # TODO: powinien być or ale wywala błąd
-            while self.budget[current_ant_index] > 0 and len(not_visited_verticles) > 0:
-            # while len(not_visited_verticles) != 0:
+            helper_index = 1
+            while len(not_visited_verticles) != 0:
                 # Tablica zawierająca prawodopodobieństwa przejść do kolejno nieodwiedzonych wierzchołków
                 probability_of_next_verticle = []
                 # Oblicz prawdopodobieństwo przejścia między wierzchołkami przez feromon
@@ -146,42 +138,40 @@ class ACO(object):
                 probability_list_sum = sum(probability_of_next_verticle)
                 # Bierzemy prawdopodobienstwo jednego wierzchołka  i dzielimy przez sumę prawdopodobieństw wszystkich wierzchołków
                 probability_of_next_verticle = [v / probability_list_sum for v in probability_of_next_verticle]
+                
+                #---------------------BUDGET PART START---------------------------
                 # Ruletka wybiera miasto
-                next_verticle_index = self.random(probability_of_next_verticle)
-
-                # TODO: sprawdzić czy działa
-                
-                cost_of_edge = int(self.graph[current_verticle][next_verticle_index])
-                
-                # Jeżeli chce przejść sam do siebie ( -1 zwraca metoda cost_of_edge_weight_between() )
-                if cost_of_edge == -1: continue
-                    
-                # Jeżeli budżet mrówki jest większy lub równy kosztu przejścia
-                elif self.budget[current_ant_index] >= cost_of_edge:
-                    current_verticle = not_visited_verticles[next_verticle_index]
-                    helper_index += 1
-                    
-                else:
-                    # Szukamy innego, tańszego przejścia
-                    print("Ant No. ", colored(current_ant_index, "green"), " can't go from ", colored(current_ant_index, "yellow"), " to ", colored(next_verticle_index, "yellow"))
-                    # Usuwamy z listy poszukiwań wierzchołek, do którego budżet nie pozwoli nam przejść
-                    not_visited_verticles.remove(not_visited_verticles[next_verticle_index])
+                possible_next_verticle = not_visited_verticles[self.random(probability_of_next_verticle)]
+                # Nie chcemy przejść do samego siebie
+                if self.graph[current_verticle][possible_next_verticle] == 0:
+                    not_visited_verticles.remove([possible_next_verticle])
+                    continue
+                # Jeśli budżet do przejścia między tymi dwoma jest za mały
+                elif self.budget[current_ant_index] < self.graph[current_verticle][possible_next_verticle]:
+                    not_visited_verticles.remove(possible_next_verticle)
                     continue
 
-                # W macierzy "ant_colony[current_ant_index][helper_index]"
-                # Współrzędna current_ant_index to numer mrówki, 
-                # a helper_index to nr wierzcholka, do ktorego przeszła mrówka.
+                # Jeżeli wybieramy się do nowego wierzchołka i mamy na to budżet
+                self.budget[current_ant_index] -= self.graph[current_verticle][possible_next_verticle]
+                # Przechodzimy, więc to nasz nowy obecny wierzchołek
+                current_verticle = possible_next_verticle
                 # Tworzymy więc dla każdej mrówkę jej ścieżkę.
                 self.ant_colony[current_ant_index][helper_index] = current_verticle
+                # Usuwamy wierzchołek z listy nieodwiedzonych 
+                not_visited_verticles.remove(current_verticle)
+                helper_index += 1
 
-                # TODO: zmniejszyć budżet o koszt przejścia self.graph[poprzedni wierzcholek][nastepny wierzcholek]
-                self.budget[current_ant_index] -= cost_of_edge
-                print("Ant No. ", colored(current_ant_index, "green"), " current budget: ", colored(self.budget[current_ant_index], "green"))
-                
-                # Jeśli szukamy dalej spełniających budżet wierzchołków, to musimy usunąć ten w którym 
-                # się zatrzymaliśmy w ramach tych poszukiwań, żeby nie przeszedł sam do siebie
-                if current_verticle in not_visited_verticles:
-                    not_visited_verticles.remove(current_verticle)
+                #---------------------BUDGET PART END---------------------------
+
+                #---------------------DZIAŁAJĄCA STARA CZĘŚĆ START---------------------------
+                # # Ruletka wybiera miasto
+                # next_verticle_index = self.random(probability_of_next_verticle)
+                # current_verticle = not_visited_verticles[next_verticle_index]
+                # # Tworzymy więc dla każdej mrówkę jej ścieżkę.
+                # self.ant_colony[current_ant_index][helper_index] = current_verticle
+                # not_visited_verticles.remove(current_verticle)
+                # helper_index += 1
+                #---------------------DZIAŁAJĄCA STARA CZĘŚĆ END---------------------------
 
     
     # Oblicz długość ścieżki
