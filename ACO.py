@@ -48,7 +48,7 @@ class ACO(object):
         # Macierz feromonów wypełniona jedynkami
         self.pheromone = np.ones([self.number_of_verticles, self.number_of_verticles])  
         # Kolonia mrówek, czyli każda mrówka i jej skończona droga
-        self.ant_colony = [[0 for _ in range(self.number_of_verticles)] for _ in range(self.number_of_ants)]
+        self.ant_colony = [[-1 for _ in range(self.number_of_verticles)] for _ in range(self.number_of_ants)]
         # Oblicz macierz sąsiedztwa (odległości między miastami)
         self.graph = self.calculate_weights_between_verticles()  
         # Funkcja heurystyczna (do wzoru na prawdopodobieństwo)   
@@ -110,7 +110,7 @@ class ACO(object):
 
     # Stwórz kolonię mrówek - kolejne słowa ze spektrum przypisane są liczbom od <0 do len(spektrum)>
     def ant_run(self):
-        # TODO: uzględnić przerwanie gdy skończy się budżet
+        # TODO: uzględnić przerwanie gdy skończy się budżet - DONE 18.05.2022
         for current_ant_index in range(self.number_of_ants):  
             # Losuje liczbę w zakresie liczby miast
             start_verticle = random.randint(0, self.number_of_verticles - 1)  
@@ -139,7 +139,7 @@ class ACO(object):
                 # Bierzemy prawdopodobienstwo jednego wierzchołka  i dzielimy przez sumę prawdopodobieństw wszystkich wierzchołków
                 probability_of_next_verticle = [v / probability_list_sum for v in probability_of_next_verticle]
                 
-                #---------------------BUDGET PART START---------------------------
+                #---------------------BUDGET PART START--------------------------- 18.05.2022
                 # Ruletka wybiera miasto
                 possible_next_verticle = not_visited_verticles[self.random(probability_of_next_verticle)]
                 # Nie chcemy przejść do samego siebie
@@ -161,7 +161,7 @@ class ACO(object):
                 not_visited_verticles.remove(current_verticle)
                 helper_index += 1
 
-                #---------------------BUDGET PART END---------------------------
+                #---------------------BUDGET PART END---------------------------18.05.2022
 
                 #---------------------DZIAŁAJĄCA STARA CZĘŚĆ START---------------------------
                 # # Ruletka wybiera miasto
@@ -178,9 +178,24 @@ class ACO(object):
     def calculate_one_path_cost(self, path):
         cost = 0
         for index in range(len(path) - 1):
+            #-------------ZMIANY START----------------18.05.2022
+            # Jeżeli mrówka nie przeszła całej trasy bo miała za mały budżet,
+            # to reszta jej ścieżki wierzchołków wypełniona jest -1, trzeba to uwzględnić.
+            # Powoduje to jednak kolejny ?problem?, bo krótsze ścieżki będą tańsze
             a = path[index]
             b = path[index + 1]
+            # Jeżli natrafimy na koniec trasy 
+            if b == -1:
+                break
             cost += self.graph[a][b]
+            #-------------ZMIANY END----------------18.05.2022
+
+            #-------------DZIAŁAJĄCA STARA CZĘŚĆ START----------------
+            # a = path[index]
+            # b = path[index + 1]
+            # cost += self.graph[a][b]
+            #-------------DZIAŁAJĄCA STARA CZĘŚĆ END----------------
+
         # Zwraca dystans pokonany przez mrówkę.
         return cost  
 
@@ -304,4 +319,5 @@ class ACO(object):
 file_names = ["instance.txt"]  
 for file_name in file_names:
     new = ACO(file_name)
-    new.run()
+    print(new.ant_run())
+    # new.run()
