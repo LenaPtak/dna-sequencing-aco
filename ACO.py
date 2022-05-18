@@ -257,6 +257,7 @@ class ACO(object):
             if current_cheapest_cost < cheapest_cost:
                 cheapest_cost = current_cheapest_cost
                 cheapest_path = current_cheapest_path
+                
 
             # Zaktualizuj feromon
             self.update_pheromone()
@@ -264,6 +265,15 @@ class ACO(object):
             end = time.time()
             print("Iteracja: ", iteracja, "     " if len(str(iteracja))==1 else "    ", colored(str(int(iteracja / self.liczba_iteracji * 100)) + ("%     " if len(str(iteracja))==1 else "%    "), "green"),
                   "Czas do końca: ", colored(str(self.time_to_finish(iteracja, start_verticle - end)), "yellow"))
+
+        #------USUWANIE PUSTYCH PRZEJŚĆ (-1) START--------18.05.2022
+        
+        to_expensive_verticles = []
+        # Usuwamy minus jedynki (-1) z ścieżki, (-1) oznaczają że tam już się skończył budżet
+        while cheapest_path[-1] == -1:
+            deleted = cheapest_path.pop()
+            to_expensive_verticles.append(deleted)
+        #------USUWANIE PUSTYCH PRZEJŚĆ (-1) END--------18.05.2022
 
         print(f"\nNajmniejszy koszt ścieżki {self.file_name}: {colored(cheapest_cost, 'green')}")
         print("\nKolejność indeksów wierzchołków:", *cheapest_path)
@@ -298,7 +308,8 @@ class ACO(object):
         with open("results.txt", "w+") as file:
             sequence = ""
             for j in range(size):
-                for i in reversed(range(self.number_of_verticles)):
+                for i in reversed(range(len(cheapest_path))):
+                # for i in reversed(range(self.number_of_verticles)):
                     letter = sequence_matrix[i][j]
                     if letter != " ":
                         sequence += letter
@@ -319,5 +330,5 @@ class ACO(object):
 file_names = ["instance.txt"]  
 for file_name in file_names:
     new = ACO(file_name)
-    print(new.ant_run())
-    # new.run()
+    # print(new.ant_run())
+    new.run()
