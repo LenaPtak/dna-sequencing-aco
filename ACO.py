@@ -38,6 +38,7 @@ class ACO(object):
         # Spektrum - cały zbiór podanych słów 
         self.spektrum = spektrum
         # Długość sekwencji
+        # TODO: length_of_sequence nie być hard-coded, ale z pliku np. albo nazwy
         self.length_of_sequence = 209
         # Długość pojedynczego słowa w spektrum
         self.length_of_word = len(spektrum[0])
@@ -54,13 +55,14 @@ class ACO(object):
         # Funkcja heurystyczna (do wzoru na prawdopodobieństwo)   
         # Ilość śladu feromonowego                                           
         self.eta = 10. / self.graph     
+        # Tablica budzetu dla każdej mrówki
+        self.budget = [self.length_of_sequence - self.length_of_word for _ in range(self.number_of_ants)]
 
         # Tablica dystansów zrobionych przez mrówki.
         self.paths = None  
         self.iter_x = []
         self.iter_y = []
 
-        self.budget = [self.length_of_sequence - self.length_of_word for _ in range(self.number_of_ants)]
 
 
     # Cij -> Funkcja sprawdzajaca wagi pomiedzy podanymi wierzcholkami (slowami)
@@ -100,17 +102,25 @@ class ACO(object):
     def random(self, probability_of_next_verticle):
         x = np.random.rand()
         # Enumerate umożliwia  iterację po obiektach takich jak lista
-        # przy jednoczesnej informacji, którą iterację wykonujemy.
-        # TODO: sprawdzić czy lepsze wyniki są z posortowaną tablicą czy nie
-        for index, t in enumerate(probability_of_next_verticle): 
-            x -= t
-            if x <= 0: break
+        # przy jednoczesnej informacji, którą iterację wykonujemy index - nr iteracji, t - wartości po których iterujemy.
+        #-----  PRAWDOPODOBIEŃSTWO WIERZCHOŁKA START --------------------------- 24.05.2022
+        # W teorii lepiej, żeby była tablica probability_of_next_verticle była posortowana od największego jednak nie wpływa to na wynik
+        sorted_probability_of_next_verticle = sorted(probability_of_next_verticle, reverse=True)
+        for index, t in enumerate(sorted_probability_of_next_verticle): 
+            x -= t              
+            if x <= 0: break   
         # zwraca indeks następnego miasta do odwiedzenia.
-        return index  
+        return probability_of_next_verticle.index(sorted_probability_of_next_verticle[index])
+        #-----  PRAWDOPODOBIEŃSTWO WIERZCHOŁKA END --------------------------- 24.05.2022
+        #---------------------DZIAŁAJĄCA STARA CZĘŚĆ START---------------------------
+        # for index, t in enumerate(probability_of_next_verticle): 
+        #     x -= t              
+        #     if x <= 0: break 
+        # return index
 
     # Stwórz kolonię mrówek - kolejne słowa ze spektrum przypisane są liczbom od <0 do len(spektrum)>
     def ant_run(self):
-        # TODO: uzględnić przerwanie gdy skończy się budżet - DONE 18.05.2022
+        # Przerwanie gdy skończy się budżet - DONE 18.05.2022
         for current_ant_index in range(self.number_of_ants):  
             # Losuje liczbę w zakresie liczby miast
             start_verticle = random.randint(0, self.number_of_verticles - 1)  
@@ -182,6 +192,8 @@ class ACO(object):
             # Jeżeli mrówka nie przeszła całej trasy bo miała za mały budżet,
             # to reszta jej ścieżki wierzchołków wypełniona jest -1, trzeba to uwzględnić.
             # Powoduje to jednak kolejny ?problem?, bo krótsze ścieżki będą tańsze
+            # Odp: Nie do końca jest to problem, ponieważ w przypadku selektywnego komiwojażera nie zależy nam
+            # na przejściu wszystkich ścieżek, tylko na przejściu jak największej ilości krótkich ścieżek zanim skończy  nam się budżet.
             a = path[index]
             b = path[index + 1]
             # Jeżli natrafimy na koniec trasy 
@@ -214,20 +226,22 @@ class ACO(object):
         # Macierz feromonów
         delta_pheromone = np.zeros([self.number_of_verticles, self.number_of_verticles]) 
         # Tablica kosztów ścieżek przebytych przez mrówki.
-        # TODO: sprawdzić czy poniższa linia nie jest nadmiarowa - raczej nie trzeba liczyć jeszcze raz
-        paths = self.calculate_cost_of_paths()  
+        # --- Poniższa linia jest nadmiarowa, nie trzeba liczyć jeszcze raz. --- 24.05.2022
+        # Co dziwne przy ponownym obliczeniu paths wyniki wydają się ciut lepsze.
+        # paths = self.calculate_cost_of_paths()  
         for i in range(self.number_of_ants):  # m - liczba mrówek
             for j in range(self.number_of_verticles - 1):
+                # TODO: zastanowić się, czy mrówki tutaj zostawiają ślad tylko po wierzchołkach, które przeszły
                 a = self.ant_colony[i][j]
                 b = self.ant_colony[i][j + 1]
                 # Zostawianie feromonów.
-                delta_pheromone[a][b] = delta_pheromone[a][b] + self.q / paths[i]  
+                delta_pheromone[a][b] = delta_pheromone[a][b] + self.q / self.paths[i]  
 
-            # TODO: prawdopodobnie trzeba usunąć domknięcie ścieżki
-            a = self.ant_colony[i][0]
-            b = self.ant_colony[i][-1]
+            # W naszym przypadku nie ma domknięcie ścieżki - mrówki zostawiają feromon tylko na wierz., które przeszły. 24.05.2022
+            # a = self.ant_colony[i][0]
+            # b = self.ant_colony[i][-1]
             # Domknięcie ścieżki z zostawianiem feromonu.
-            delta_pheromone[a][b] = delta_pheromone[a][b] + self.q / paths[i]  
+            # delta_pheromone[a][b] = delta_pheromone[a][b] + self.q / self.paths[i]  
                                               
         # Na początku paruje i dodaje te nowe zostawione pheromone.
         # Wszystkie ścieżki parują tzn wszystkie wartości w tablicy feromonów mnożymy razy (1 - self.rho), czyli 0,9. I dodajemy wartość feromonow.
@@ -327,8 +341,9 @@ class ACO(object):
                 
 
 # Tutaj bedzie miejsca na przetestowanie wszystkich instancji w pętli tworząc dla każdej obiekt
-file_names = ["instance.txt"]  
+file_names = ["instance.txt", "instance1.txt", "9.200+80.txt"]  
 for file_name in file_names:
+    print(file_name)
     new = ACO(file_name)
     # print(new.ant_run())
     new.run()
