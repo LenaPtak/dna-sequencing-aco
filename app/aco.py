@@ -1,4 +1,3 @@
-from msilib import sequence
 from termcolor import colored
 import numpy as np
 import datetime
@@ -20,7 +19,7 @@ class ACO(object):
             print(colored("Error while reading file. Check the name of file or it's content.", "red"))
             sys.exit()
         
-         # Liczba mrówek
+        # Liczba mrówek
         self.number_of_ants = 30  
         # Współczynnik ważności feromonów
         self.alpha = 1 
@@ -31,7 +30,7 @@ class ACO(object):
         # Stały współczynnik
         self.q = 1  
         # Liczba iteracji
-        self.liczba_iteracji = 10
+        self.liczba_iteracji = 5
 
         # Nazwa pliku
         self.file_name = file_name
@@ -231,12 +230,15 @@ class ACO(object):
         # paths = self.calculate_cost_of_paths()  
         for i in range(self.number_of_ants):  # m - liczba mrówek
             for j in range(self.number_of_verticles - 1):
-                # TODO: zastanowić się, czy mrówki tutaj zostawiają ślad tylko po wierzchołkach, które przeszły
+                
                 a = self.ant_colony[i][j]
                 b = self.ant_colony[i][j + 1]
+
+                # TODO: zastanowić się, czy mrówki tutaj zostawiają ślad tylko po wierzchołkach, które przeszły - DONE 25.05.2022
+                if b == -1: break
                 # Zostawianie feromonów.
                 delta_pheromone[a][b] = delta_pheromone[a][b] + self.q / self.paths[i]  
-
+                
             # W naszym przypadku nie ma domknięcie ścieżki - mrówki zostawiają feromon tylko na wierz., które przeszły. 24.05.2022
             # a = self.ant_colony[i][0]
             # b = self.ant_colony[i][-1]
@@ -340,10 +342,3 @@ class ACO(object):
             print(self.spektrum[Si], colored("--", "green"), colored(self.graph[Si][Sj], "yellow"), colored("->", "green"), self.spektrum[Sj])
                 
 
-# Tutaj bedzie miejsca na przetestowanie wszystkich instancji w pętli tworząc dla każdej obiekt
-file_names = ["instance.txt", "instance1.txt", "9.200+80.txt"]  
-for file_name in file_names:
-    print(file_name)
-    new = ACO(file_name)
-    # print(new.ant_run())
-    new.run()
