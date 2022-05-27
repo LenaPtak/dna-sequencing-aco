@@ -21,25 +21,37 @@ instance_groups_names = [
     "Instancje z błędami pozytywnymi, przekłamania na końcach oligonukleotydów"
 ]
 
-# Testujemy algorytm dla każdej podgrupy instancji 
-for index, instance_group in enumerate(instance_groups):
-    print("\n--------------------------------------------------")
-    print(f"{colored(instance_groups_names[index], 'yellow')}")
-    print("--------------------------------------------------\n")
-    for instance in instance_group:
+POJEDYNCZY_TEST = True
 
-        name_of_file = instance[0] 
-        # Jeżeli nie ma odpowiedniego pliku w folderze "instances" to pomijamy
-        if name_of_file not in listed_files:
-            continue
-        n = instance[1]
-        l = instance[2]
-        number_of_mistakes = instance[3]
+if POJEDYNCZY_TEST:
+    # Testujemy algorytm dla JEDNEJ instancji
+    name_of_file = "58.300-120.txt"
+    n = 309
+    l = 10
+    number_of_mistakes = 120
+    new = ACO(instance_files_path + '\\' + name_of_file, name_of_file, n, l, number_of_mistakes)
+    new.run()
 
-        print(f"Instancja: {colored(name_of_file, 'green')}")
-        print(f"Liczba bledow: {colored(number_of_mistakes, 'green')}")
-        print(f"n: {colored(n, 'green')}\nl: {colored(l, 'green')}\n")
-        new = ACO(instance_files_path + '\\' + name_of_file)
-        new.run()
+else:
+    # Testujemy algorytm dla każdej podgrupy instancji (do zostawienia na przyklad na noc)
+    for index, instance_group in enumerate(instance_groups):
+        print("\n--------------------------------------------------")
+        print(f"{colored(instance_groups_names[index], 'yellow')}")
+        print("--------------------------------------------------\n")
+        for instance in instance_group:
 
-        print("\n--------------------------------------------------\n")
+            name_of_file = instance[0] 
+            # Jeżeli nie ma odpowiedniego pliku w folderze "instances" to pomijamy
+            if name_of_file not in listed_files:
+                continue
+            n = instance[1]
+            l = instance[2]
+            number_of_mistakes = instance[3]
+
+            print(f"Instancja: {colored(name_of_file, 'green')}")
+            print(f"Liczba bledow: {colored(number_of_mistakes, 'green')}")
+            print(f"n: {colored(n, 'green')}\nl: {colored(l, 'green')}\n")
+            new = ACO(instance_files_path + '\\' + name_of_file, name_of_file, n, l, number_of_mistakes)
+            new.run()
+
+            print("\n--------------------------------------------------\n")

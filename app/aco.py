@@ -1,4 +1,5 @@
 from termcolor import colored
+from datetime import datetime
 import numpy as np
 import datetime
 import random
@@ -8,10 +9,10 @@ import sys
 
 class ACO(object):
     
-    def __init__(self, file_name):
+    def __init__(self, file_path, file_name, n, l, number_of_mistakes):
         # Próby otworzenia pliku
         try:
-            with open(file_name, "r+") as f:
+            with open(file_path, "r+") as f:
                 spektrum = list(f.read().split('\n'))
                 spektrum.pop()
                 spektrum = list(map(str, spektrum))
@@ -30,19 +31,23 @@ class ACO(object):
         # Stały współczynnik
         self.q = 1  
         # Liczba iteracji
-        self.liczba_iteracji = 5
+        self.liczba_iteracji = 100
 
+        # Sciezka do wynikow
+        self.result_files_path = 'app\\results'
         # Nazwa pliku
         self.file_name = file_name
         # Spektrum - cały zbiór podanych słów 
         self.spektrum = spektrum
         # Długość sekwencji
-        # TODO: length_of_sequence nie być hard-coded, ale z pliku np. albo nazwy
-        self.length_of_sequence = 209
+        # TODO: length_of_sequence nie być hard-coded, ale z pliku np. albo nazwy - DONE 27.05.2022
+        self.length_of_sequence = n
         # Długość pojedynczego słowa w spektrum
-        self.length_of_word = len(spektrum[0])
+        self.length_of_word = l
         # Liczba wszystkich slów w spektrum
         self.number_of_words = len(spektrum)
+        # Liczba bledow
+        self.number_of_mistakes = number_of_mistakes
         # Liczba wierzchołków
         self.number_of_verticles = self.number_of_words  
         # Macierz feromonów wypełniona jedynkami
@@ -282,8 +287,8 @@ class ACO(object):
             print("Iteracja: ", iteracja, "     " if len(str(iteracja))==1 else "    ", colored(str(int(iteracja / self.liczba_iteracji * 100)) + ("%     " if len(str(iteracja))==1 else "%    "), "green"),
                   "Czas do końca: ", colored(str(self.time_to_finish(iteracja, start_verticle - end)), "yellow"))
 
+
         #------USUWANIE PUSTYCH PRZEJŚĆ (-1) START--------18.05.2022
-        
         to_expensive_verticles = []
         # Usuwamy minus jedynki (-1) z ścieżki, (-1) oznaczają że tam już się skończył budżet
         while cheapest_path[-1] == -1:
@@ -294,34 +299,32 @@ class ACO(object):
         print(f"\nNajmniejszy koszt ścieżki {self.file_name}: {colored(cheapest_cost, 'green')}")
         print("\nKolejność indeksów wierzchołków:", *cheapest_path)
 
-
         shift = ""
         sequence_list = []
         sequence_matrix = []
 
-        for visited in range(len(cheapest_path)-1):
-            Si = cheapest_path[visited]
-            Sj = cheapest_path[visited+1]
+        # Przechodzimy po wybranej najtanszej sciezce
+        for verticle in range(len(cheapest_path)-1):
+            Si = cheapest_path[verticle]
+            Sj = cheapest_path[verticle+1]
             word = shift + self.spektrum[Si]
             sequence_list.append(word)
-            # print(word)
             next_shift = self.graph[Si][Sj]
+            # Nastepny wierzcholek bedzie przesuniety o dana wartosc przejscia
             shift += " " * int(next_shift)
-            if (visited == len(cheapest_path)-2):
+            # To wyjatek dla ostatniego wierzcholka
+            if (verticle == len(cheapest_path)-2):
                 word = shift + self.spektrum[Sj]
                 sequence_list.append(word)
 
-        size = 0
-        for i in sequence_list:
-            if len(i) > size: size = len(i)
-        
+        size = max([len(x) for x in sequence_list ])      
         for i in sequence_list:
             temp = i
             while len(temp) != size:
                 temp += " "
             sequence_matrix.append(list(temp))
         
-        with open("results.txt", "w+") as file:
+        with open(f"app\\results\\result_{self.file_name}.txt", "w+") as file:
             sequence = ""
             for j in range(size):
                 for i in reversed(range(len(cheapest_path))):
@@ -329,8 +332,27 @@ class ACO(object):
                     letter = sequence_matrix[i][j]
                     if letter != " ":
                         sequence += letter
-                        file.write(f'{"".join(sequence_matrix[i])}\n')
                         break
+            
+            # datetime object containing current date and time
+            file.write(f'Data badania: {datetime.datetime.now()}\n')
+            file.write(f'Nazwa pliku: {self.file_name}\n')
+
+            file.write(f'Liczba iteracji: {self.liczba_iteracji}\n')
+            file.write(f'Liczba mrowek: {self.number_of_ants}\n')
+
+            file.write(f'Liczba oligonukleotydow w pliku: {len(self.spektrum)}\n')
+            file.write(f'Liczba oligonukleotydow po algorytmie: {len(cheapest_path)}\n')
+            
+            file.write(f'Docelowa dlugosc sekwencji: n = {self.length_of_sequence}\n')
+            file.write(f'Uzyskana dlugosc sekwencji: n = {len(sequence)}\n')
+
+            file.write(f'Dokladnosc: {len(sequence)}/{self.length_of_sequence} = {round(len(sequence)/self.length_of_sequence*100, 2)}%\n')
+            file.write(f'Uzyskana sekwencja: {sequence}\n')
+            file.write(f'Ponizej kolejne oligonukleotydy sekwencji wraz z przejsciami (przesuniecia): \n\n')
+            
+            for x in range(len(cheapest_path)):
+                file.write(f'{"".join(sequence_matrix[x])}\n')
 
         print("\nSekwencja: " + colored(sequence, "green"))
         print("\nDługość sekwencji: " + colored(len(sequence), "yellow"))
