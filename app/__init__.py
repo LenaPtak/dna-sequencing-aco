@@ -21,7 +21,7 @@ instance_groups_names = [
     "Instancje z błędami pozytywnymi, przekłamania na końcach oligonukleotydów"
 ]
 
-POJEDYNCZY_TEST = True
+POJEDYNCZY_TEST = False
 
 if POJEDYNCZY_TEST:
     # Testujemy algorytm dla JEDNEJ instancji

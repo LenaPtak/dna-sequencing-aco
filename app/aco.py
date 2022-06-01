@@ -40,7 +40,7 @@ class ACO(object):
         # Spektrum - cały zbiór podanych słów 
         self.spektrum = spektrum
         # Długość sekwencji
-        # TODO: length_of_sequence nie być hard-coded, ale z pliku np. albo nazwy - DONE 27.05.2022
+        # length_of_sequence nie być hard-coded, ale z pliku np. albo nazwy - DONE 27.05.2022
         self.length_of_sequence = n
         # Długość pojedynczego słowa w spektrum
         self.length_of_word = l
@@ -239,7 +239,7 @@ class ACO(object):
                 a = self.ant_colony[i][j]
                 b = self.ant_colony[i][j + 1]
 
-                # TODO: zastanowić się, czy mrówki tutaj zostawiają ślad tylko po wierzchołkach, które przeszły - DONE 25.05.2022
+                # Zastanowić się, czy mrówki tutaj zostawiają ślad tylko po wierzchołkach, które przeszły - DONE 25.05.2022
                 if b == -1: break
                 # Zostawianie feromonów.
                 delta_pheromone[a][b] = delta_pheromone[a][b] + self.q / self.paths[i]  
