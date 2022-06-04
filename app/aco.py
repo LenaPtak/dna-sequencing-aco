@@ -9,7 +9,7 @@ import sys
 
 class ACO(object):
     
-    def __init__(self, file_path, file_name, n, l, number_of_mistakes):
+    def __init__(self, file_path, file_name, n, l, number_of_mistakes, instance_type):
         # Próby otworzenia pliku
         try:
             with open(file_path, "r+") as f:
@@ -21,17 +21,17 @@ class ACO(object):
             sys.exit()
         
         # Liczba mrówek
-        self.number_of_ants = 30  
+        self.number_of_ants = 40  
         # Współczynnik ważności feromonów
         self.alpha = 1 
         # Ważny czynnik funkcji heurystycznej
-        self.beta = 5  
+        self.beta = 20
         # Lotny czynnik feromonów
         self.rho = 0.1  
         # Stały współczynnik
         self.q = 1  
         # Liczba iteracji
-        self.liczba_iteracji = 100
+        self.liczba_iteracji = 300
 
         # Sciezka do wynikow
         self.result_files_path = 'app\\results'
@@ -39,6 +39,8 @@ class ACO(object):
         self.file_name = file_name
         # Spektrum - cały zbiór podanych słów 
         self.spektrum = spektrum
+        # Rodzaj instancji
+        self.instance_type = instance_type
         # Długość sekwencji
         # length_of_sequence nie być hard-coded, ale z pliku np. albo nazwy - DONE 27.05.2022
         self.length_of_sequence = n
@@ -58,7 +60,7 @@ class ACO(object):
         self.graph = self.calculate_weights_between_verticles()  
         # Funkcja heurystyczna (do wzoru na prawdopodobieństwo)   
         # Ilość śladu feromonowego                                           
-        self.eta = 10. / self.graph     
+        self.eta = 1. / self.graph     
         # Tablica budzetu dla każdej mrówki
         self.budget = [self.length_of_sequence - self.length_of_word for _ in range(self.number_of_ants)]
 
@@ -109,18 +111,18 @@ class ACO(object):
         # przy jednoczesnej informacji, którą iterację wykonujemy index - nr iteracji, t - wartości po których iterujemy.
         #-----  PRAWDOPODOBIEŃSTWO WIERZCHOŁKA START --------------------------- 24.05.2022
         # W teorii lepiej, żeby była tablica probability_of_next_verticle była posortowana od największego jednak nie wpływa to na wynik
-        sorted_probability_of_next_verticle = sorted(probability_of_next_verticle, reverse=True)
-        for index, t in enumerate(sorted_probability_of_next_verticle): 
-            x -= t              
-            if x <= 0: break   
-        # zwraca indeks następnego miasta do odwiedzenia.
-        return probability_of_next_verticle.index(sorted_probability_of_next_verticle[index])
+        # sorted_probability_of_next_verticle = sorted(probability_of_next_verticle, reverse=True)
+        # for index, t in enumerate(sorted_probability_of_next_verticle): 
+        #     x -= t              
+        #     if x <= 0: break   
+        # # zwraca indeks następnego miasta do odwiedzenia.
+        # return probability_of_next_verticle.index(sorted_probability_of_next_verticle[index])
         #-----  PRAWDOPODOBIEŃSTWO WIERZCHOŁKA END --------------------------- 24.05.2022
         #---------------------DZIAŁAJĄCA STARA CZĘŚĆ START---------------------------
-        # for index, t in enumerate(probability_of_next_verticle): 
-        #     x -= t              
-        #     if x <= 0: break 
-        # return index
+        for index, t in enumerate(probability_of_next_verticle): 
+            x -= t              
+            if x <= 0: break 
+        return index
 
     # Stwórz kolonię mrówek - kolejne słowa ze spektrum przypisane są liczbom od <0 do len(spektrum)>
     def ant_run(self):
@@ -259,6 +261,7 @@ class ACO(object):
         return str(datetime.timedelta(seconds=sekundyDoKonca))
 
     def run(self):
+        startRun = time.time()
         # Wartość najtańszej ścieżki ustawiamy na plus nieskończoność.
         cheapest_cost = math.inf  
         # Najtańsza ścieżka.
@@ -287,6 +290,7 @@ class ACO(object):
             print("Iteracja: ", iteracja, "     " if len(str(iteracja))==1 else "    ", colored(str(int(iteracja / self.liczba_iteracji * 100)) + ("%     " if len(str(iteracja))==1 else "%    "), "green"),
                   "Czas do końca: ", colored(str(self.time_to_finish(iteracja, start_verticle - end)), "yellow"))
 
+        endRun = time.time()
 
         #------USUWANIE PUSTYCH PRZEJŚĆ (-1) START--------18.05.2022
         to_expensive_verticles = []
@@ -337,17 +341,24 @@ class ACO(object):
             # datetime object containing current date and time
             file.write(f'Data badania: {datetime.datetime.now()}\n')
             file.write(f'Nazwa pliku: {self.file_name}\n')
+            file.write(f'Rodzaj instancji: {self.instance_type}\n')
+            file.write(f'Liczba bledow: {self.number_of_mistakes}\n')
+
+            file.write(f'Czas: {round(endRun - startRun, 4)}\n')
+
 
             file.write(f'Liczba iteracji: {self.liczba_iteracji}\n')
             file.write(f'Liczba mrowek: {self.number_of_ants}\n')
 
+
             file.write(f'Liczba oligonukleotydow w pliku: {len(self.spektrum)}\n')
             file.write(f'Liczba oligonukleotydow po algorytmie: {len(cheapest_path)}\n')
-            
+            file.write(f'Dokladnosc algorytmu: {len(cheapest_path)}/{len(self.spektrum)} = {round(len(cheapest_path)/len(self.spektrum)*100, 2)}%\n')
+
             file.write(f'Docelowa dlugosc sekwencji: n = {self.length_of_sequence}\n')
             file.write(f'Uzyskana dlugosc sekwencji: n = {len(sequence)}\n')
 
-            file.write(f'Dokladnosc: {len(sequence)}/{self.length_of_sequence} = {round(len(sequence)/self.length_of_sequence*100, 2)}%\n')
+            file.write(f'Dokladnosc dlugosci sekwencji: {len(sequence)}/{self.length_of_sequence} = {round(len(sequence)/self.length_of_sequence*100, 2)}%\n')
             file.write(f'Uzyskana sekwencja: {sequence}\n')
             file.write(f'Ponizej kolejne oligonukleotydy sekwencji wraz z przejsciami (przesuniecia): \n\n')
             

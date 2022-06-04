@@ -3,6 +3,8 @@ from aco import ACO
 from os import listdir
 from termcolor import colored  
 from os.path import isfile, join
+import time
+
 
 instance_files_path = 'app\instances'
 listed_files = [f for f in listdir(instance_files_path) if isfile(join(instance_files_path, f))]
@@ -15,21 +17,21 @@ instance_groups = [
     instances.instances_positive_second_type
 ]
 instance_groups_names = [
-    "Instancje z błędami negatywnymi losowymi",
-    "Instancje z błędami negatywnymi wynikającymi z powtórzeń",
-    "Instancje z błędami pozytywnymi losowymi",
-    "Instancje z błędami pozytywnymi, przekłamania na końcach oligonukleotydów"
+    "Instancje z bledami negatywnymi losowymi",
+    "Instancje z bledami negatywnymi wynikającymi z powtorzen",
+    "Instancje z bledami pozytywnymi losowymi",
+    "Instancje z bledami pozytywnymi, przekłamania na koncach oligonukleotydow"
 ]
 
-POJEDYNCZY_TEST = False
+POJEDYNCZY_TEST = True
 
 if POJEDYNCZY_TEST:
     # Testujemy algorytm dla JEDNEJ instancji
-    name_of_file = "58.300-120.txt"
+    name_of_file = "9.200+80.txt"
     n = 309
     l = 10
     number_of_mistakes = 120
-    new = ACO(instance_files_path + '\\' + name_of_file, name_of_file, n, l, number_of_mistakes)
+    new = ACO(instance_files_path + '\\' + name_of_file, name_of_file, n, l, number_of_mistakes, "POZY")
     new.run()
 
 else:
@@ -38,6 +40,7 @@ else:
         print("\n--------------------------------------------------")
         print(f"{colored(instance_groups_names[index], 'yellow')}")
         print("--------------------------------------------------\n")
+        instance_type = instance_groups_names[index]
         for instance in instance_group:
 
             name_of_file = instance[0] 
@@ -51,7 +54,8 @@ else:
             print(f"Instancja: {colored(name_of_file, 'green')}")
             print(f"Liczba bledow: {colored(number_of_mistakes, 'green')}")
             print(f"n: {colored(n, 'green')}\nl: {colored(l, 'green')}\n")
-            new = ACO(instance_files_path + '\\' + name_of_file, name_of_file, n, l, number_of_mistakes)
-            new.run()
 
-            print("\n--------------------------------------------------\n")
+            start = time.time()
+            new = ACO(instance_files_path + '\\' + name_of_file, name_of_file, n, l, number_of_mistakes, instance_type)
+            new.run()
+            end = time.time()
