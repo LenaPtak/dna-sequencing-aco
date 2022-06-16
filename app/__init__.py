@@ -27,10 +27,10 @@ POJEDYNCZY_TEST = True
 
 if POJEDYNCZY_TEST:
     # Testujemy algorytm dla JEDNEJ instancji
-    name_of_file = "9.200+80.txt"
-    n = 309
+    name_of_file = "35.200-40.txt"
+    n = 209
     l = 10
-    number_of_mistakes = 120
+    number_of_mistakes = 40
     new = ACO(instance_files_path + '\\' + name_of_file, name_of_file, n, l, number_of_mistakes, "POZY")
     new.run()
 

@@ -19,19 +19,19 @@ class ACO(object):
         except:
             print(colored("Error while reading file. Check the name of file or it's content.", "red"))
             sys.exit()
-        
+
         # Liczba mrówek
-        self.number_of_ants = 40  
+        self.number_of_ants = 20  
         # Współczynnik ważności feromonów
-        self.alpha = 1 
+        self.alpha = 1
         # Ważny czynnik funkcji heurystycznej
-        self.beta = 20
+        self.beta = 40
         # Lotny czynnik feromonów
         self.rho = 0.1  
         # Stały współczynnik
         self.q = 1  
         # Liczba iteracji
-        self.liczba_iteracji = 300
+        self.liczba_iteracji = 100
 
         # Sciezka do wynikow
         self.result_files_path = 'app\\results'
@@ -128,6 +128,8 @@ class ACO(object):
     def ant_run(self):
         # Przerwanie gdy skończy się budżet - DONE 18.05.2022
         for current_ant_index in range(self.number_of_ants):  
+            #Liczymy długość sekwencji (ścieżki)
+            ant_sequence_len = 0
             # Losuje liczbę w zakresie liczby miast
             start_verticle = random.randint(0, self.number_of_verticles - 1)  
             # Zaczynamy zapisywanie ścieżki dla mrówki inicjując pierwszy wierzchołek
@@ -138,7 +140,10 @@ class ACO(object):
             current_verticle = start_verticle
             # Zmienna pomocnicza
             helper_index = 1
-            while len(not_visited_verticles) != 0:
+            # Zmienna pomocnicza 2
+            counter = 0
+
+            while (len(not_visited_verticles) != 0) and (ant_sequence_len <= self.length_of_sequence):
                 # Tablica zawierająca prawodopodobieństwa przejść do kolejno nieodwiedzonych wierzchołków
                 probability_of_next_verticle = []
                 # Oblicz prawdopodobieństwo przejścia między wierzchołkami przez feromon
@@ -160,15 +165,37 @@ class ACO(object):
                 possible_next_verticle = not_visited_verticles[self.random(probability_of_next_verticle)]
                 # Nie chcemy przejść do samego siebie
                 if self.graph[current_verticle][possible_next_verticle] == 0:
-                    not_visited_verticles.remove([possible_next_verticle])
+                    not_visited_verticles.remove(possible_next_verticle)
                     continue
                 # Jeśli budżet do przejścia między tymi dwoma jest za mały
                 elif self.budget[current_ant_index] < self.graph[current_verticle][possible_next_verticle]:
                     not_visited_verticles.remove(possible_next_verticle)
+                    # print("Nie starczy budzetu", helper_index)
                     continue
+                elif (ant_sequence_len + self.graph[current_verticle][possible_next_verticle]) > self.length_of_sequence:
+                    not_visited_verticles.remove(possible_next_verticle)
+                    # print("Nie starczy sekwencji")
+                    
+                    
+
+                # Jeśli koszt przejscia jest za duzy dla nas
+                elif self.graph[current_verticle][possible_next_verticle] > 4:
+                    # not_visited_verticles.remove(possible_next_verticle)
+                    # print("za duzy koszt przejscia, sprobuje jeszcze raz", self.graph[current_verticle][possible_next_verticle])
+                    counter+=1
+                    if (counter < 5):
+                        continue
+
+                counter = 0
 
                 # Jeżeli wybieramy się do nowego wierzchołka i mamy na to budżet
                 self.budget[current_ant_index] -= self.graph[current_verticle][possible_next_verticle]
+                
+                
+                #Zwiększamy długośc sekwencji o koszt
+                ant_sequence_len += self.graph[current_verticle][possible_next_verticle]
+                # print(self.graph[current_verticle][possible_next_verticle])
+                
                 # Przechodzimy, więc to nasz nowy obecny wierzchołek
                 current_verticle = possible_next_verticle
                 # Tworzymy więc dla każdej mrówkę jej ścieżkę.
@@ -176,6 +203,7 @@ class ACO(object):
                 # Usuwamy wierzchołek z listy nieodwiedzonych 
                 not_visited_verticles.remove(current_verticle)
                 helper_index += 1
+                
 
                 #---------------------BUDGET PART END---------------------------18.05.2022
 
@@ -189,6 +217,9 @@ class ACO(object):
                 # helper_index += 1
                 #---------------------DZIAŁAJĄCA STARA CZĘŚĆ END---------------------------
 
+            # # print(f"Mrowka {current_ant_index} sekwencja {ant_sequence_len} numer iteracji {helper_index} \
+            #         len(not_visited_verticles) != 0 {len(not_visited_verticles) != 0} \
+            #             ant_sequence_len {ant_sequence_len} <= self.length_of_sequence {self.length_of_sequence}")
     
     # Oblicz długość ścieżki
     def calculate_one_path_cost(self, path):
@@ -266,30 +297,42 @@ class ACO(object):
         cheapest_cost = math.inf  
         # Najtańsza ścieżka.
         cheapest_path = None  
-
         for iteracja in range(self.liczba_iteracji):
+
+            self.ant_colony = [[-1 for _ in range(self.number_of_verticles)] for _ in range(self.number_of_ants)]
+            self.budget = [self.length_of_sequence - self.length_of_word for _ in range(self.number_of_ants)]
+
             start_verticle = time.time()
             # Tworzymy nową grupę składającą się z self.number_of_ants mrówek
             self.ant_run()  
             # Tablica kosztów przebytych przez powyższe mrówki ścieżek
-            self.paths = self.calculate_cost_of_paths()  
+            self.paths = self.calculate_cost_of_paths()
+            # for i, v in enumerate(self.paths):
+            #     print(i, v)  
+
             # Najmniejszy koszt z aktualnej grupy mrówek
-            current_cheapest_cost = min(self.paths)  
+            # current_cheapest_cost = min(self.paths)
+            length_difference = math.inf
+            for path_cost in self.paths:
+                if self.length_of_sequence - path_cost < length_difference:
+                    length_difference = self.length_of_sequence - path_cost
+                    current_cheapest_cost = path_cost 
             # Najtańsza ścieżka z aktualnej grupy mrówek - lista wierzchołków
             current_cheapest_path = self.ant_colony[self.paths.index(current_cheapest_cost)]  
+
             # Zaktualizuj optymalne rozwiązanie
-            if current_cheapest_cost < cheapest_cost:
+            if self.length_of_sequence - current_cheapest_cost > self.length_of_sequence - cheapest_cost:
                 cheapest_cost = current_cheapest_cost
                 cheapest_path = current_cheapest_path
                 
-
             # Zaktualizuj feromon
             self.update_pheromone()
 
             end = time.time()
             print("Iteracja: ", iteracja, "     " if len(str(iteracja))==1 else "    ", colored(str(int(iteracja / self.liczba_iteracji * 100)) + ("%     " if len(str(iteracja))==1 else "%    "), "green"),
-                  "Czas do końca: ", colored(str(self.time_to_finish(iteracja, start_verticle - end)), "yellow"))
-
+                  "Czas do końca: ", colored(str(self.time_to_finish(iteracja, start_verticle - end)), "yellow"), end=' ')
+            print(f'    Dokladnosc algorytmu: {len(cheapest_path)}/{len(self.spektrum)} = {round(len(cheapest_path)/len(self.spektrum)*100, 2)}%')
+        
         endRun = time.time()
 
         #------USUWANIE PUSTYCH PRZEJŚĆ (-1) START--------18.05.2022
@@ -374,4 +417,3 @@ class ACO(object):
             Sj = cheapest_path[visited+1]
             print(self.spektrum[Si], colored("--", "green"), colored(self.graph[Si][Sj], "yellow"), colored("->", "green"), self.spektrum[Sj])
                 
-
